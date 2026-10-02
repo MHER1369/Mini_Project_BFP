@@ -1,3 +1,4 @@
+#به نام ایزد منان
 #کلاس والد  شامل ویژگی ها مشترک کل قسمت های ORF
 class ORF:
     def __init__(self, strand, frame, start_pos, protein, is_complete):
@@ -26,8 +27,6 @@ class ORFDetector:
     def __init__(self, sequence):
         self.sequence = sequence
 
-    def detect(self):
-        raise NotImplementedError #شناسایی به عهده تابع فرزند
 
 #ORF Fwd را پیدا کن.(for RNA)
 class ForwardORFDetector(ORFDetector):
@@ -65,13 +64,13 @@ class ForwardORFDetector(ORFDetector):
                                 is_complete=True
                             )
 
-                            orfs.append(orf)
+                            orfs.append(orf) #افزودن ORF به orf
                             break
 
 
-                        protein_codons.append(current_codon)
+                        protein_codons.append(current_codon)#اگر کدون استاپ نبود کدونی که یافت شده رو کنار بذار
 
-                        j += 3
+                        j += 3 #عمل پیمایش 3 تایی را بعد از کدون آغاز انجام میدهد.
 
 
                     else:
@@ -86,6 +85,6 @@ class ForwardORFDetector(ORFDetector):
 
                         orfs.append(orf)
 
-                i += 3
+                i += 3 #عمل پیمایش سه تایی قبل از کدون آغاز را انجام میدهد
 
         return orfs
