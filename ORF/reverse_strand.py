@@ -4,45 +4,46 @@ class ORF:
     start_codon = "AUG"
     stop_codon = {"UAA", "UAG", "UGA"}
 
-    def __init__(self, rna, reverse_rna):
-        self.rna = rna
-        self.reverse_rna = reverse_rna
+    def __init__(self, sequence):
+        self.sequence = sequence
 
 
 class ReverseStrand(ORF):
+
     def find_orf(self):
         orfs = []
 
-        for frame in range(3):
+        for reverse_frame in range(3):
             start_pos = None
-            for i in range(frame, len(self.reverse_rna) - 2, 3):
-                codon = self.reverse_rna[i:i + 3]
+            for i in range(reverse_frame, len(self.sequence) - 2, 3):
+                codon = self.sequence[i:i + 3]
 
                 if codon == self.start_codon:
                     if start_pos is None:
                         start_pos = i
 
                 elif codon in self.stop_codon and start_pos is not None:
-                    orf = self.reverse_rna[start_pos:i + 3]
-                    start_pos = len(self.reverse_rna) - i - 1
+                    orf = self.sequence[start_pos:i + 3]
+                    original_start_pos = len(self.sequence) - start_pos - 1
                     orfs.append({
-                        "Strand" : "Reverse",
-                        "Frame" : frame,
-                        "Start" : start_pos,
+                        "strand" : "Reverse",
+                        "frame" : reverse_frame,
+                        "start" : original_start_pos,
+                        "stop" : i + 3,
                         "sequence" : orf,
-                        "Status" : "Complete"
+                        "status" : "Complete"
                     })
-
-                start_pos = None
+                    start_pos = None
 
             if start_pos is not None:
-                orf = self.reverse_rna[start_pos:]
-                start_pos = len(self.reverse_rna) - i - 1
+                orf = self.sequence[start_pos:]
+                original_start_pos = len(self.sequence) - start_pos - 1
                 orfs.append({
-                    "Strand" : "Reverse",
-                    "Frame" : frame,
-                    "Start" : start_pos,
+                    "strand" : "Reverse",
+                    "frame" : reverse_frame,
+                    "start" : original_start_pos,
+                    "stop" : len(self.sequence),
                     "sequence" : orf,
-                    "Status" : "Incomplete"
+                    "status" : "Incomplete"
                 })
         return orfs
