@@ -7,7 +7,6 @@ class ORF:
         self.start_pos = start_pos
         self.protein = protein
         self.is_complete = is_complete
-<<<<<<< HEAD
 
 #به نام ایزد منان
 from .ORF import ORF, ORFDetector
@@ -33,9 +32,6 @@ class ORF:
         )
 
 
-=======
-#کلاس والد  شامل ویژگی ها مشترک کل قسمت های ORF
->>>>>>> 6e66747 (Update forward_strand.py)
 class ORFDetector:
     START_CODON = "AUG"
     STOP_CODONS = {"UAA", "UAG", "UGA"}
