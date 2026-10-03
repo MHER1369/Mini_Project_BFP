@@ -2,7 +2,7 @@
 from ORF.Forward_strand import ForwardORFDetector
 from ORF.Reverse_strand import ReverseStrand
 
-from Translation.Translator import (
+from Translation.protein_translation import (
     TranslationData,
     Translator
 )
