@@ -3,12 +3,12 @@ from ..ORF.ORF import ORF
 
 class TranslationData:
 
-    def __init__(self, codon_table_path, amino_weights_path):
+    def __init__(self, "data/codon_table.txt","data/amino_weights.txt"):
         self.codon_table = {}
         self.amino_weights = {}
 
-        self.load_codon_table(codon_table_path)
-        self.load_amino_weights(amino_weights_path)
+        self.load_codon_table("data/codon_table.txt")
+        self.load_amino_weights("data/amino_weights.txt")
 
     def load_codon_table(self, file_path):
 
@@ -23,34 +23,9 @@ class TranslationData:
 
                 parts = line.split()
 
-                if len(parts) != 2:
-                    raise DataFileError(
-                        f"Malformed codon table at line {line_number}"
-                    )
-
                 codon = parts[0].upper()
                 amino_acid = parts[1].upper()
 
-                if len(codon) != 3:
-                    raise DataFileError(
-                        f"Invalid codon at line {line_number}: {codon}"
-                    )
-
-                if any(base not in "AUCG" for base in codon):
-                    raise DataFileError(
-                        f"Invalid codon at line {line_number}: {codon}"
-                    )
-
-                if len(amino_acid) != 1:
-                    raise DataFileError(
-                        f"Invalid amino acid at line {line_number}: "
-                        f"{amino_acid}"
-                    )
-
-                if codon in self.codon_table:
-                    raise DataFileError(
-                        f"Duplicate codon at line {line_number}: {codon}"
-                    )
 
                 self.codon_table[codon] = amino_acid
 
