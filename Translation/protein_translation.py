@@ -1,4 +1,4 @@
-#اسکلت اولیه کد ترجمه. تغییرات لازم اعمال خواهد شد
+#تغییرات لازم اعمال شدند. 
 from ..ORF.ORF import ORF
 
 class TranslationData:
