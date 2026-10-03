@@ -1,5 +1,5 @@
 #به نام ایزد منان
-#کلاس والد  شامل ویژگی ها مشترک کل قسمت های ORF
+#کلاس ORF برای تبدیل کردن هر sequence و اطلاعاتش به صورت یک شئ
 class ORF:
     def __init__(self, strand, frame, start_pos, protein, is_complete):
         self.strand = strand
@@ -7,19 +7,7 @@ class ORF:
         self.start_pos = start_pos
         self.protein = protein
         self.is_complete = is_complete
-
-    def __repr__(self):
-        return (
-            f"ORF("
-            f"strand={self.strand}, "
-            f"frame={self.frame}, "
-            f"start_pos={self.start_pos}, "
-            f"protein={self.protein}, "
-            f"is_complete={self.is_complete}"
-            f")"
-        )
-
-
+#کلاس والد  شامل ویژگی ها مشترک کل قسمت های ORF
 class ORFDetector:
     START_CODON = "AUG"
     STOP_CODONS = {"UAA", "UAG", "UGA"}
@@ -32,8 +20,9 @@ class ORFDetector:
 class ForwardORFDetector(ORFDetector):
 
     def detect(self):
-        orfs = []  #ایجاد لیست خالی برای افزودن خروجی برنامه. انتخاب لیست بدلیل دسترسی راحت هنگام استفاده از خروجی برنامه.
-        
+        orfs = []   #لیست خالی برای اینکه اطلاعاتی که برنامه تولید میکند را در آن وارد کنیم
+        #از لیست های استفاده کردیم چون که بعد ها در قسمت های دیگر برنامه تا بتوانیم هر مقدار
+        # ORF که پیدا کردیم را درون اضافه کنیم در حالی که با index را به راحتی میتوانیم به آن دسترسی داشتهی باشم
         for frame in range(3): #رنج 3 برای بررسی 3 فریم
 
             i = frame
@@ -45,7 +34,7 @@ class ForwardORFDetector(ORFDetector):
                 if codon == self.START_CODON:#تشخیص کدون آغاز
 
                     start_pos = i#آغاز عملیات
-                    protein_codons = []#ایجاد لیست برای ثبت رشته
+                    protein_sequence = []#ایجاد لیست برای ثبت رشته
 
                     j = i
                     #j مسئولیت پیمایش بر روی رشته بعد کدون آغار را دارد
@@ -59,7 +48,7 @@ class ForwardORFDetector(ORFDetector):
                                 strand="Forward",
                                 frame=frame,
                                 start_pos=start_pos,
-                                protein=protein_codons,
+                                sequence=protein_sequence,
                                 is_complete=True
                             )
 
@@ -67,7 +56,7 @@ class ForwardORFDetector(ORFDetector):
                             break
 
 
-                        protein_codons.append(current_codon)#اگر کدون استاپ نبود کدونی که یافت شده رو کنار بذار
+                        protein_sequence.append(current_codon)#اگر کدون استاپ نبود کدونی که یافت شده رو کنار بذار
 
                         j += 3 #عمل پیمایش 3 تایی را بعد از کدون آغاز انجام میدهد.
 
@@ -78,11 +67,15 @@ class ForwardORFDetector(ORFDetector):
                             strand="Forward",
                             frame=frame,
                             start_pos=start_pos,
-                            protein=protein_codons,
+                            sequence=protein_sequence,
                             is_complete=False
                         )
 
                         orfs.append(orf)
+
+                i += 3 #عمل پیمایش سه تایی قبل از کدون آغاز را انجام میدهد
+
+        return orfs
 
                 i += 3 #عمل پیمایش سه تایی قبل از کدون آغاز را انجام میدهد
 
