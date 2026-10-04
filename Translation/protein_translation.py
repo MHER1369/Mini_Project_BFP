@@ -101,6 +101,3 @@ class Translator:
             translated_orfs.append(translated_orf)
 
         return translated_orfs
-
-
-        return translated_orfs

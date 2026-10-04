@@ -20,3 +20,4 @@ class ORFDetector:
 
     def detect(self):
         raise NotImplementedError
+
