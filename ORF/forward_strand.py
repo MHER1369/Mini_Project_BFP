@@ -1,5 +1,5 @@
 #به نام ایزد منان
-#کلاس والد  شامل ویژگی ها مشترک کل قسمت های ORF
+#کلاس ORF برای تبدیل کردن هر sequence و اطلاعاتش به صورت یک شئ
 class ORF:
     def __init__(self, strand, frame, start_pos, protein, is_complete):
         self.strand = strand
@@ -7,6 +7,7 @@ class ORF:
         self.start_pos = start_pos
         self.protein = protein
         self.is_complete = is_complete
+<<<<<<< HEAD
 
 #به نام ایزد منان
 from .ORF import ORF, ORFDetector
@@ -32,6 +33,9 @@ class ORF:
         )
 
 
+=======
+#کلاس والد  شامل ویژگی ها مشترک کل قسمت های ORF
+>>>>>>> 6e66747 (Update forward_strand.py)
 class ORFDetector:
     START_CODON = "AUG"
     STOP_CODONS = {"UAA", "UAG", "UGA"}
@@ -44,8 +48,9 @@ class ORFDetector:
 class ForwardORFDetector(ORFDetector):
 
     def detect(self):
-        orfs = []  #ایجاد لیست خالی برای افزودن خروجی برنامه. انتخاب لیست بدلیل دسترسی راحت هنگام استفاده از خروجی برنامه.
-        
+        orfs = []   #لیست خالی برای اینکه اطلاعاتی که برنامه تولید میکند را در آن وارد کنیم
+        #از لیست های استفاده کردیم چون که بعد ها در قسمت های دیگر برنامه تا بتوانیم هر مقدار
+        # ORF که پیدا کردیم را درون اضافه کنیم در حالی که با index را به راحتی میتوانیم به آن دسترسی داشتهی باشم
         for frame in range(3): #رنج 3 برای بررسی 3 فریم
 
             i = frame
@@ -72,6 +77,7 @@ class ForwardORFDetector(ORFDetector):
                                 frame=frame,
                                 start_pos=start_pos,
                                 protein=protein_sequence,
+                                sequence=protein_sequence,
                                 is_complete=True
                             )
 
@@ -82,22 +88,5 @@ class ForwardORFDetector(ORFDetector):
                         protein_sequence.append(current_codon)#اگر کدون استاپ نبود کدونی که یافت شده رو کنار بذار
 
                         j += 3 #عمل پیمایش 3 تایی را بعد از کدون آغاز انجام میدهد.
-
-
-                    else:
-
-                        orf = ORF(
-                            strand="Forward",
-                            frame=frame,
-                            start_pos=start_pos,
-                            protein=protein_sequence,
-                            is_complete=False
-                        )
-
-                        orfs.append(orf)
-
-                i += 3 #عمل پیمایش سه تایی قبل از کدون آغاز را انجام میدهد
-
-        return orfs
 
 
