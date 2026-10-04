@@ -1,9 +1,8 @@
 #تغییرات لازم اعمال شدند. 
-from ..ORF.ORF import ORF
-
 class TranslationData:
 
     def __init__(self, codon_table_path, amino_weights_path):
+
         self.codon_table = {}
         self.amino_weights = {}
 
@@ -23,10 +22,8 @@ class TranslationData:
 
                 parts = line.split()
 
-
                 codon = parts[0].upper()
                 amino_acid = parts[1].upper()
-
 
                 self.codon_table[codon] = amino_acid
 
@@ -42,6 +39,7 @@ class TranslationData:
                     continue
 
                 parts = line.split()
+
                 amino_acid = parts[0].upper()
                 weight = float(parts[1])
 
@@ -63,6 +61,7 @@ class Translator:
 
             amino_acid = self.data.codon_table[codon]
 
+            # Stop Codon
             if amino_acid == "*":
                 continue
 
@@ -91,16 +90,17 @@ class Translator:
 
         return orf
 
-    def translate_orfs(self, forward_orfs, reverse_orfs):
+    def translate_orfs(self, orfs):
 
         translated_orfs = []
 
-        for orf in forward_orfs:
+        for orf in orfs:
+
             translated_orf = self.translate_orf(orf)
+
             translated_orfs.append(translated_orf)
 
-        for orf in reverse_orfs:
-            translated_orf = self.translate_orf(orf)
-            translated_orfs.append(translated_orf)
+        return translated_orfs
+
 
         return translated_orfs
