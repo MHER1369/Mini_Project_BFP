@@ -2,7 +2,6 @@
 
 from .ORF import ORF, ORFDetector
 
-
 class ReverseStrand(ORFDetector):
 
     def detect(self):
@@ -91,7 +90,5 @@ class ReverseStrand(ORFDetector):
                 orfs.append(orf)
 
         return orfs
-
-
 
 # Finall changes
