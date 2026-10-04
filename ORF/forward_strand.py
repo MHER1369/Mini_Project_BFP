@@ -1,4 +1,3 @@
-
 #به نام ایزد منان
 from .ORF import ORF, ORFDetector
 
