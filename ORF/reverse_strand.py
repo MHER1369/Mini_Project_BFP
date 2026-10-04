@@ -1,4 +1,5 @@
 # In the name of Allah
+<<<<<<< HEAD
 #دیباگ شده با chatGPT
 from .ORF import ORF, ORFDetector
 
@@ -92,18 +93,13 @@ class ReverseStrand(ORFDetector):
         return orfs
 
 # Finall changes
+=======
+from .ORF import ORF, ORFDetector
+>>>>>>> 7649bb1 (Update reverse_strand.py)
 
-class ORF:
-    start_codon = "AUG"
-    stop_codon = {"UAA", "UAG", "UGA"}
+class ReverseStrand(ORFDetector):
 
-    def __init__(self, sequence):
-        self.sequence = sequence
-
-
-class ReverseStrand(ORF):
-
-    def find_orf(self):
+    def detect(self):
         orfs = []
 
         for reverse_frame in range(3):
@@ -115,30 +111,39 @@ class ReverseStrand(ORF):
                     if start_pos is None:
                         start_pos = i
 
-                elif codon in self.stop_codon and start_pos is not None:
-                    orf = self.sequence[start_pos:i + 3]
+                elif (codon in self.stop_codon and start_pos is not None):
+                    protein_sequence = []
+                    for j in range(start_pos, i, 3):
+                        protein_sequence.append(self.sequence[j:j+3])
                     original_start_pos = len(self.sequence) - start_pos - 1
-                    orfs.append({
-                        "strand" : "Reverse",
-                        "frame" : reverse_frame,
-                        "start" : original_start_pos,
-                        "stop" : i + 3,
-                        "sequence" : orf,
-                        "status" : "Complete"
-                    })
+                    orf = ORF(
+                        strand="Reverse",
+                        frame=reverse_frame,
+                        start_pos=original_start_pos,
+                        protein=protein_sequence,
+                        is_complete=True
+                    )
+
+                    orfs.append(orf)
                     start_pos = None
 
             if start_pos is not None:
-                orf = self.sequence[start_pos:]
+                protein_sequence= []
+                for j in range (start_pos,len(self.sequence) - 2, 3):
+                    protein_sequence.append(self.sequence[j:j + 3])
                 original_start_pos = len(self.sequence) - start_pos - 1
-                orfs.append({
-                    "strand" : "Reverse",
-                    "frame" : reverse_frame,
-                    "start" : original_start_pos,
-                    "stop" : len(self.sequence),
-                    "sequence" : orf,
-                    "status" : "Incomplete"
-                })
+                orf=ORF(
+                    strand="Reverse",
+                    frame=reverse_frame,
+                    start_pos=original_start_pos,
+                    protein=protein_sequence,
+                    is_complete=False
+                    )
+
         return orfs
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 7649bb1 (Update reverse_strand.py)
 # Finall changes
