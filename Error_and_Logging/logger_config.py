@@ -1,20 +1,15 @@
 import logging
-import os
 import sys
 
 
-def setup_logger(output_dir=None):
-    if output_dir is None:
-        project_dir = os.path.dirname(
-            os.path.dirname(os.path.abspath(__file__))
-        )
-        output_dir = os.path.join(project_dir, "output")
-
-    os.makedirs(output_dir, exist_ok=True)
-
-    log_path = os.path.join(
-        output_dir,
-        "bioforge.log"
+def setup_logger():
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(levelname)s - %(message)s",
+        handlers=[
+            logging.FileHandler("output/bioforge.log", mode="a", encoding="utf-8"),
+            logging.StreamHandler(sys.stdout)
+        ]
     )
 
     logger = logging.getLogger("bioforge")
