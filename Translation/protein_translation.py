@@ -153,7 +153,7 @@ class Translator:
             translated_orfs.append(translated_orf)
 
         return translated_orfs
-        pass
+    
 
     def calculate_weight(self, protein):
 
@@ -194,4 +194,4 @@ class Translator:
         return translated_orfs
 
 
-        return translated_orfs
+    
