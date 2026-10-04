@@ -1,6 +1,6 @@
 #این فایل مین برای تست کردن مابقی کد ها توسط Ai ساخته شده است. 
-from ORF.Forward_strand import ForwardORFDetector
-from ORF.Reverse_strand import ReverseStrand
+from ORF.forward_strand import ForwardORFDetector
+from ORF.reverse_strand import ReverseStrand
 
 from Translation.protein_translation import (
     TranslationData,
