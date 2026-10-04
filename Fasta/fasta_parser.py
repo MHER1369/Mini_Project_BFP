@@ -5,6 +5,7 @@ pattern = r"^\>\s*(?P<id>\S+)\s*(?P<desc>.*)$"
 def parse_fasta(file_path):
 
     try: #مدیریت خطا در بخش logging تکمیل شود
+        with open(file_path, "r", encoding="utf-8") as file:
         with open(file_path, "r") as file:
 
             records = []
