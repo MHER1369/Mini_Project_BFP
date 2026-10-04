@@ -1,3 +1,6 @@
+"""تعریف خطاهای اختصاصی مورد استفاده در خط پردازش BioForge."""
+
+
 class BioForgeError(Exception):
     pass
 
