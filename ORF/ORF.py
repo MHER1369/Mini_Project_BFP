@@ -20,7 +20,4 @@ class ORFDetector:
 
     def detect(self):
         raise NotImplementedError
-<<<<<<< HEAD
 
-=======
->>>>>>> f82013f (Create ORF.py)
