@@ -1,4 +1,5 @@
 #به نام ایزد منان
+<<<<<<< HEAD
 #کلاس ORF برای تبدیل کردن هر sequence و اطلاعاتش به صورت یک شئ
 class ORF:
     def __init__(self, strand, frame, start_pos, protein, is_complete):
@@ -40,6 +41,9 @@ class ORFDetector:
         self.sequence = sequence
 
 
+=======
+from .ORF import ORF, ORFDetector
+>>>>>>> 7fe7b3f (Update forward_strand.py)
 #ORF Fwd را پیدا کن.(for RNA)
 class ForwardORFDetector(ORFDetector):
 
