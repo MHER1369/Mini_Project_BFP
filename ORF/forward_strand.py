@@ -62,6 +62,3 @@ class ForwardORFDetector(ORFDetector):
 
         return orfs
 
-                i += 3 #عمل پیمایش سه تایی قبل از کدون آغاز را انجام میدهد
-
-        return orfs
