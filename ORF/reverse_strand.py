@@ -1,6 +1,6 @@
 # In the name of Allah
 
-from ORF import ORF, ORFDetector
+from ORF.ORF import ORF, ORFDetector
 
 class ReverseStrand(ORFDetector):
 
