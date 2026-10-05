@@ -1,5 +1,5 @@
 # In the name of Allah
-#دیباگ شده با chatGPT
+
 from .ORF import ORF, ORFDetector
 
 class ReverseStrand(ORFDetector):

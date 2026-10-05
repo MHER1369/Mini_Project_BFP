@@ -1,5 +1,35 @@
 #به نام ایزد منان
 from .ORF import ORF, ORFDetector
+
+#کلاس والد  شامل ویژگی ها مشترک کل قسمت های ORF
+class ORF:
+    def __init__(self, strand, frame, start_pos, protein, is_complete):
+        self.strand = strand
+        self.frame = frame
+        self.start_pos = start_pos
+        self.protein = protein
+        self.is_complete = is_complete
+
+    def __repr__(self):
+        return (
+            f"ORF("
+            f"strand={self.strand}, "
+            f"frame={self.frame}, "
+            f"start_pos={self.start_pos}, "
+            f"protein={self.protein}, "
+            f"is_complete={self.is_complete}"
+            f")"
+        )
+
+
+class ORFDetector:
+    START_CODON = "AUG"
+    STOP_CODONS = {"UAA", "UAG", "UGA"}
+
+    def __init__(self, sequence):
+        self.sequence = sequence
+
+
 #ORF Fwd را پیدا کن.(for RNA)
 class ForwardORFDetector(ORFDetector):
 
@@ -33,6 +63,7 @@ class ForwardORFDetector(ORFDetector):
                                 frame=frame,
                                 start_pos=start_pos,
                                 protein=protein_sequence,
+                                sequence=protein_sequence,
                                 is_complete=True
                             )
 
@@ -44,20 +75,4 @@ class ForwardORFDetector(ORFDetector):
 
                         j += 3 #عمل پیمایش 3 تایی را بعد از کدون آغاز انجام میدهد.
 
-
-                    else:
-
-                        orf = ORF(
-                            strand="Forward",
-                            frame=frame,
-                            start_pos=start_pos,
-                            protein=protein_sequence,
-                            is_complete=False
-                        )
-
-                        orfs.append(orf)
-
-                i += 3 #عمل پیمایش سه تایی قبل از کدون آغاز را انجام میدهد
-
-        return orfs
 
