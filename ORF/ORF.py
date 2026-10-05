@@ -19,5 +19,5 @@ class ORFDetector:
         self.sequence = sequence
 
     def detect(self):
-        raise NotImplementedError
+        raise NotImplementedError("Raise")
 

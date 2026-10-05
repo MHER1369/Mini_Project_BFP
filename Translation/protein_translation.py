@@ -46,10 +46,10 @@ class TranslationData:
                 self.amino_weights[amino_acid] = weight
 
 
-class Translator:
+#class Translator:
 
 #اسکلت اولیه کد ترجمه. تغییرات لازم اعمال خواهد شد
-from ..ORF.ORF import ORF
+from ORF.ORF import ORF
 
 class TranslationData:
 
