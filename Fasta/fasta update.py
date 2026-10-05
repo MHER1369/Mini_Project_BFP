@@ -1,5 +1,6 @@
 import re
-pattern = r">\s*(?P<id>\s+)\s*(?P<desc>.*)$"
+
+pattern = r"^>\s*(?P<id>\S+)\s*(?P<desc>.*)$"
 
 def validate_sequence(sequence):
     valid_bases = "ATCG"
@@ -39,7 +40,7 @@ def parse_fasta(file_path):
                 if line.startswith(">"):
                     match = re.match(pattern, line)
                     if match is None:
-                        raise ValueError("Invaid FASTA header")
+                        raise ValueError("Invalid FASTA header")
                     
                     sequence_id = match.group("id")
                     description = match.group("desc")
@@ -49,11 +50,11 @@ def parse_fasta(file_path):
                     
                     if current_record is not None:
                         if current_record["sequence"] == "":
-                            raise ValueError("Header found withouut sequence")
+                            raise ValueError("Header found without sequence")
                         validate_sequence(current_record["sequence"])
                         records.append(current_record)
                     if sequence_id in seen_ids:
-                        print("Warnin: Duplicate sequence ID") # در فایل لاگ ثبت می شود
+                        raise ValueError("Duplicate sequence ID")
 
                     seen_ids.add(sequence_id)
 
