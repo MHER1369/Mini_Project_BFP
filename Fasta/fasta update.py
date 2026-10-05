@@ -45,7 +45,7 @@ def parse_fasta(file_path):
                     sequence_id = match.group("id")
                     description = match.group("desc")
 
-                    if sequence_id.startswith("oranism=") or sequence_id.startswith("sample="):
+                    if sequence_id.startswith("organism=") or sequence_id.startswith("sample="):
                         raise ValueError("Sequence ID is missing")
                     
                     if current_record is not None:
@@ -59,7 +59,7 @@ def parse_fasta(file_path):
                     seen_ids.add(sequence_id)
 
                     organism = None
-                    sample= None
+                    sample = None
                     description_parts = []
 
                     for part in description.split():
@@ -89,7 +89,7 @@ def parse_fasta(file_path):
                 raise ValueError("FASTA file is empty")
             
             if current_record["sequence"] == "":
-                raise ValueError("Header found withot sequence")
+                raise ValueError("Header found without sequence")
             validate_sequence(current_record["sequence"])
             records.append(current_record)
 
