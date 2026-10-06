@@ -1,4 +1,9 @@
 import re
+import logging
+
+from Error_and_Logging.errors import FastaFormatError, InvalidSequenceError
+
+logger = logging.getLogger("bioforge")
 
 pattern = r"^>\s*(?P<id>\S+)\s*(?P<desc>.*)$"
 
@@ -6,7 +11,7 @@ def validate_sequence(sequence):
     valid_bases = "ATCG"
     for base in sequence.upper():
         if base not in valid_bases:
-            raise ValueError("Invalid DNA sequence")
+            raise InvalidSequenceError(f"Invalid DNA character: {base}")
         
 def complement(sequence):
     translation_table = str.maketrans("ATCG", "TAGC")
@@ -30,31 +35,46 @@ def parse_fasta(file_path):
     records = []
     current_record = None
     seen_ids = set()
+    seen_header = False
+
+    def save_record(record):
+        # خطای قابل‌بازیابی اینجا ثبت می‌شود تا رکوردهای سالم ادامه پیدا کنند.
+        try:
+            if not record["sequence"]:
+                raise FastaFormatError("Header found without sequence")
+            validate_sequence(record["sequence"])
+        except (FastaFormatError, InvalidSequenceError) as error:
+            logger.error("%s: skipping record %s: %s", file_path, record["id"], error)
+            return
+        records.append(record)
 
     try:
         with open(file_path, "r", encoding="utf-8") as file:
-            for line in file:
+            for line_number, line in enumerate(file, start=1):
                 line = line.strip()
                 if line == "":
                     continue
                 if line.startswith(">"):
-                    match = re.match(pattern, line)
-                    if match is None:
-                        raise ValueError("Invalid FASTA header")
-                    
-                    sequence_id = match.group("id")
-                    description = match.group("desc")
-
-                    if sequence_id.startswith("organism=") or sequence_id.startswith("sample="):
-                        raise ValueError("Sequence ID is missing")
-                    
+                    seen_header = True
                     if current_record is not None:
-                        if current_record["sequence"] == "":
-                            raise ValueError("Header found without sequence")
-                        validate_sequence(current_record["sequence"])
-                        records.append(current_record)
+                        save_record(current_record)
+                    current_record = None
+
+                    try:
+                        match = re.match(pattern, line)
+                        if match is None:
+                            raise FastaFormatError("Invalid FASTA header")
+
+                        sequence_id = match.group("id")
+                        description = match.group("desc")
+                        if sequence_id.startswith("organism=") or sequence_id.startswith("sample="):
+                            raise FastaFormatError("Sequence ID is missing")
+                    except FastaFormatError as error:
+                        logger.error("%s: skipping record at line %s: %s", file_path, line_number, error)
+                        continue
+
                     if sequence_id in seen_ids:
-                        raise ValueError("Duplicate sequence ID")
+                        logger.warning("%s: Duplicate ID: %s", file_path, sequence_id)
 
                     seen_ids.add(sequence_id)
 
@@ -81,19 +101,18 @@ def parse_fasta(file_path):
                     }
                 else:
                     if current_record is None:
-                        raise ValueError("Sequence found before first header")
+                        if not seen_header:
+                            raise FastaFormatError("Sequence found before first header")
+                        continue
 
                     current_record["sequence"] += line
 
-            if current_record is None:
-                raise ValueError("FASTA file is empty")
+            if not seen_header:
+                raise FastaFormatError("FASTA file is empty")
             
-            if current_record["sequence"] == "":
-                raise ValueError("Header found without sequence")
-            validate_sequence(current_record["sequence"])
-            records.append(current_record)
+            if current_record is not None:
+                save_record(current_record)
 
     except FileNotFoundError:
         raise
     return records
-

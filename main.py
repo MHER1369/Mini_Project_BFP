@@ -1,7 +1,10 @@
 
 
 from pathlib import Path
+from math import isfinite
 
+from Error_and_Logging.errors import DataFileError, FastaFormatError, InvalidSequenceError
+from Error_and_Logging.logger_config import setup_logger
 from Fasta.fasta import parse_fasta, rna, gc_content
 from ORF.forward_strand import ForwardORFDetector
 from ORF.reverse_strand import ReverseStrand
@@ -13,64 +16,68 @@ BASE_DIR = Path(__file__).resolve().parent
 REPORT_FILE = BASE_DIR / "Output" / "report.txt"
 
 
-def get_input_file():
+def get_input_file(logger):
 
     while True:
         value = input("Enter FASTA file path: ").strip().strip('"')
 
         if not value:
-            print("Error: FASTA file path cannot be empty.")
+            logger.warning("FASTA file path cannot be empty.")
             continue
 
-        path = Path(value).expanduser()
-        if not path.is_absolute():
-            path = BASE_DIR / path
-        path = path.resolve()
+        try:
+            path = Path(value).expanduser()
+            if not path.is_absolute():
+                path = BASE_DIR / path
+            path = path.resolve()
 
-        if not path.exists():
-            print(f"Error: File not found: {path}")
-            continue
-        if not path.is_file():
-            print(f"Error: This path is not a file: {path}")
+            if not path.exists():
+                logger.warning("File not found: %s", path)
+                continue
+            if not path.is_file():
+                logger.warning("This path is not a file: %s", path)
+                continue
+        except (OSError, ValueError, RuntimeError) as error:
+            logger.warning("Cannot use input path %r: %s", value, error)
             continue
         if path.suffix.lower() not in {".fasta", ".fa", ".fna"}:
-            print("Error: File must have .fasta, .fa or .fna extension.")
+            logger.warning("File must have .fasta, .fa or .fna extension.")
             continue
 
         return path
 
 
-def get_min_length():
+def get_min_length(logger):
 
     while True:
         value = input("Enter minimum protein length: ").strip()
         try:
             min_length = int(value)
         except ValueError:
-            print("Error: Minimum length must be an integer.")
+            logger.warning("Minimum length must be an integer.")
             continue
         if min_length < 1:
-            print("Error: Minimum length must be at least 1.")
+            logger.warning("Minimum length must be at least 1.")
             continue
         return min_length
 
 
-def get_min_weight():
+def get_min_weight(logger):
 
     while True:
         value = input("Enter minimum protein weight: ").strip()
         try:
             min_weight = float(value)
         except ValueError:
-            print("Error: Minimum weight must be a number.")
+            logger.warning("Minimum weight must be a number.")
             continue
-        if min_weight < 0:
-            print("Error: Minimum weight cannot be negative.")
+        if not isfinite(min_weight) or min_weight < 0:
+            logger.warning("Minimum weight must be a finite, non-negative number.")
             continue
         return min_weight
 
 
-def process_record(record, translator):
+def process_record(record, translator, logger):
 
     dna_sequence = record["sequence"]
     rna_sequence = rna(dna_sequence)
@@ -84,6 +91,10 @@ def process_record(record, translator):
     reverse_orfs = ReverseStrand(rna_sequence).detect()
     orfs = forward_orfs + reverse_orfs
 
+    logger.info(
+        "Record %s: found %s Forward and %s Reverse ORFs; translating",
+        record["id"], len(forward_orfs), len(reverse_orfs),
+    )
     translated_orfs = translator.translate_orfs(orfs)
 
     for orf in translated_orfs:
@@ -155,36 +166,99 @@ def write_report(orfs, min_length, min_weight):
 
 
 def main():
+    try:
+        logger = setup_logger()
+    except OSError as error:
+        # اگر فایل لاگ باز نشود، خطا فقط در کنسول نمایش داده می‌شود.
+        print(f"Cannot initialize logging: {error}")
+        return 1
+    logger.info("BioForge pipeline started")
+
     print("=" * 70)
     print("BioForge Pipeline")
     print("=" * 70)
 
 
-    input_file = get_input_file()
-    min_length = get_min_length()
-    min_weight = get_min_weight()
+    try:
+        input_file = get_input_file(logger)
+        min_length = get_min_length(logger)
+        min_weight = get_min_weight(logger)
+    except (EOFError, KeyboardInterrupt):
+        logger.warning("Pipeline cancelled while reading user input.")
+        return 1
 
     print("\nPipeline configuration:")
     print(f"  FASTA file       : {input_file}")
     print(f"  Minimum length   : {min_length}")
     print(f"  Minimum weight   : {min_weight}")
 
-    records = parse_fasta(input_file)
-    translation_data = TranslationData()
+    logger.info(
+        "Input: %s; minimum length: %s; minimum weight: %s",
+        input_file, min_length, min_weight,
+    )
+    logger.info("Reading and validating FASTA file: %s", input_file)
+    try:
+        records = parse_fasta(input_file)
+    except (FastaFormatError, OSError, UnicodeError) as error:
+        logger.error("Pipeline stopped: cannot read FASTA file %s: %s", input_file, error)
+        return 1
+    if not records:
+        logger.warning("Pipeline stopped: no valid FASTA records; report not updated.")
+        return 1
+    logger.info("Valid FASTA records: %s", len(records))
+
+    logger.info("Loading codon table and amino acid weights")
+    try:
+        translation_data = TranslationData()
+    except (DataFileError, OSError, UnicodeError) as error:
+        logger.error("Pipeline stopped: cannot load translation data: %s", error)
+        return 1
     translator = Translator(translation_data)
+    logger.info("Translation data loaded successfully")
 
     all_orfs = []
+    processed_records = 0
     for record in records:
-        all_orfs.extend(process_record(record, translator))
+        logger.info("Processing record: %s", record["id"])
+        try:
+            record_orfs = process_record(record, translator, logger)
+        except InvalidSequenceError as error:
+            logger.error("Skipping record %s: %s", record["id"], error)
+            continue
+        except DataFileError as error:
+            logger.error("Pipeline stopped at record %s: %s", record["id"], error)
+            return 1
+        all_orfs.extend(record_orfs)
+        processed_records += 1
+        logger.info("Record %s: translated %s ORFs", record["id"], len(record_orfs))
 
-    proteins, length_filtered, filtered_proteins, filtered_orfs = filter_orfs(
-        all_orfs,
-        min_length,
-        min_weight,
-        translation_data.amino_weights,
+    if processed_records == 0:
+        logger.warning("Pipeline stopped: no records could be processed; report not updated.")
+        return 1
+
+    logger.info("Filtering %s ORFs", len(all_orfs))
+    try:
+        proteins, length_filtered, filtered_proteins, filtered_orfs = filter_orfs(
+            all_orfs,
+            min_length,
+            min_weight,
+            translation_data.amino_weights,
+        )
+    except DataFileError as error:
+        logger.error("Pipeline stopped during filtering: %s", error)
+        return 1
+    logger.info(
+        "Filtering results: %s after length filter; %s after weight filter",
+        len(length_filtered), len(filtered_proteins),
     )
 
-    write_report(filtered_orfs, min_length, min_weight)
+    logger.info("Writing report with IDs for %s ORFs: %s", len(filtered_orfs), REPORT_FILE)
+    try:
+        write_report(filtered_orfs, min_length, min_weight)
+    except (OSError, UnicodeError) as error:
+        logger.error("Pipeline stopped: cannot write report %s: %s", REPORT_FILE, error)
+        return 1
+    logger.info("Report saved: %s", REPORT_FILE)
 
     print("\n" + "=" * 70)
     print("Filtering Results")
@@ -194,8 +268,12 @@ def main():
     print(f"After length + weight     : {len(filtered_proteins)}")
     print(f"Report ORFs               : {len(filtered_orfs)}")
     print(f"Report file               : {REPORT_FILE}")
-    print("\nPipeline completed successfully.")
+    logger.info(
+        "Pipeline completed: %s records processed; %s records skipped during processing",
+        processed_records, len(records) - processed_records,
+    )
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

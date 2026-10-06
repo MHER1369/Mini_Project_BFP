@@ -1,3 +1,6 @@
+from Error_and_Logging.errors import DataFileError
+
+
 WATER_MASS = 18.015
 
 
@@ -41,7 +44,7 @@ class WeightFilter(Filter):
             for amino_acid in protein:
 
                 if amino_acid not in self.weights:
-                    raise ValueError(
+                    raise DataFileError(
                         f"Unknown amino acid: {amino_acid}"
                     )
 
