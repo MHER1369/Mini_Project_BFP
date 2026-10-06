@@ -1,8 +1,7 @@
 
-
 from pathlib import Path
 
-from Fasta.fasta import parse_fasta, rna, gc_content
+from Fasta.fasta import parse_fasta, rna, gc_content, reverse_complement
 from ORF.forward_strand import ForwardORFDetector
 from ORF.reverse_strand import ReverseStrand
 from Translation.protein_translation import TranslationData, Translator
@@ -23,6 +22,7 @@ def get_input_file():
             continue
 
         path = Path(value).expanduser()
+
         if not path.is_absolute():
             path = BASE_DIR / path
         path = path.resolve()
@@ -74,6 +74,7 @@ def process_record(record, translator):
 
     dna_sequence = record["sequence"]
     rna_sequence = rna(dna_sequence)
+    reverse_rna_sequence = rna(reverse_complement(dna_sequence))
 
     print("\n" + "-" * 70)
     print(f"Sequence ID : {record['id']}")
@@ -81,7 +82,7 @@ def process_record(record, translator):
     print(f"GC content  : {gc_content(dna_sequence):.2f}%")
 
     forward_orfs = ForwardORFDetector(rna_sequence).detect()
-    reverse_orfs = ReverseStrand(rna_sequence).detect()
+    reverse_orfs = ReverseStrand(reverse_rna_sequence).detect()
     orfs = forward_orfs + reverse_orfs
 
     translated_orfs = translator.translate_orfs(orfs)
