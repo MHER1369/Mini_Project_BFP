@@ -1,101 +1,117 @@
-#تغییرات لازم اعمال شدند. 
+from Error_and_Logging.errors import BioForgeError, DataFileError, InvalidSequenceError
+from math import isfinite
+import logging
+
+logger = logging.getLogger("bioforge")
+
 class TranslationData:
 
-    def __init__(self, codon_table_path, amino_weights_path):
+    codon_table_path = "BioForge/data/codon_table.txt"
+    amino_weights_path = "BioForge/data/amino_weights.txt"
+
+    def __init__(self):
 
         self.codon_table = {}
         self.amino_weights = {}
 
-        self.load_codon_table(codon_table_path)
-        self.load_amino_weights(amino_weights_path)
+        self.load_codon_table()
+        self.load_amino_weights()
 
-    def load_codon_table(self, file_path):
+    def load_codon_table(self):
 
-        with open(file_path, "r", encoding="utf-8") as file:
+        #xxx#
+        try:
 
-            for line_number, line in enumerate(file, start=1):
+            with open(self.codon_table_path, "r", encoding="utf-8") as file:
 
-                line = line.strip()
+                valid_nucleotide = set("AUCG")
 
-                if not line:
-                    continue
+                for line_number, line in enumerate(file, start=1):
 
-                parts = line.split()
+                    line = line.strip()
 
-                codon = parts[0].upper()
-                amino_acid = parts[1].upper()
+                    if not line or line.startswith("#"):
+                        continue
 
-                self.codon_table[codon] = amino_acid
+                    parts = line.split()
 
-    def load_amino_weights(self, file_path):
+                    if len(parts) != 2:
+                        raise DataFileError(
+                            f"Invalid codon table format at line {line_number}"
+                        )
 
-        with open(file_path, "r", encoding="utf-8") as file:
+                    codon = parts[0].upper()
+                    amino_acid = parts[1].upper()
 
-            for line_number, line in enumerate(file, start=1):
+                    if len(codon) != 3 or any(char not in valid_nucleotide for char in codon):
+                        raise DataFileError(
+                            f"Invalid codon '{codon}' at line {line_number}"
+                        )
 
-                line = line.strip()
+                    if amino_acid not in set("ACDEFGHIKLMNPQRSTVWY*"):
+                        raise DataFileError(
+                            f"Invalid amino acid '{amino_acid}' at line {line_number}"
+                        )
 
-                if not line:
-                    continue
+                    self.codon_table[codon] = amino_acid
+            if not self.codon_table:
+                raise DataFileError("Data file contains no entries")
+        except DataFileError as error:
+            logger.error("Data file %s: %s", self.codon_table_path, error)
+            raise
+        except (OSError, UnicodeError) as error:
+            logger.error("Cannot read data file %s: %s", self.codon_table_path, error)
+            raise DataFileError(f"Cannot read data file {self.codon_table_path}: {error}") from error
 
-                parts = line.split()
+    def load_amino_weights(self):
 
-                amino_acid = parts[0].upper()
-                weight = float(parts[1])
+        #xxx#
+        try:
 
-                self.amino_weights[amino_acid] = weight
+            with open(self.amino_weights_path, "r", encoding="utf-8") as file:
 
+                for line_number, line in enumerate(file, start=1):
 
-class Translator:
+                    line = line.strip()
 
-#اسکلت اولیه کد ترجمه. تغییرات لازم اعمال خواهد شد
-from ..ORF.ORF import ORF
+                    if not line or line.startswith("#"):
+                        continue
 
-class TranslationData:
+                    parts = line.split()
 
-    def __init__(self, codon_table_path, amino_weights_path):
+                    if len(parts) != 2:
+                        raise DataFileError(f"Invalid amino weight line: {line_number}")
 
-        self.codon_table = {}
-        self.amino_weights = {}
+                    amino_acid = parts[0].upper()
 
-        self.load_codon_table(codon_table_path)
-        self.load_amino_weights(amino_weights_path)
+                    try:
+                        weight = float(parts[1])
+                    except ValueError:
+                        raise DataFileError(
+                            f"Invalid amino acid weight at line {line_number}: "
+                            f"{parts[1]}"
+                        )
 
-    def load_codon_table(self, file_path):
+                    if amino_acid not in set("ACDEFGHIKLMNPQRSTVWY"):
+                        raise DataFileError(
+                            f"Invalid amino acid '{amino_acid}' at line {line_number}"
+                        )
+                    if not isfinite(weight) or weight <= 0:
+                        raise DataFileError(
+                            f"Invalid amino acid weight at line {line_number}: {parts[1]}"
+                        )
 
-        with open(file_path, "r", encoding="utf-8") as file:
-
-            for line_number, line in enumerate(file, start=1):
-
-                line = line.strip()
-
-                if not line:
-                    continue
-
-                parts = line.split()
-
-                codon = parts[0].upper()
-                amino_acid = parts[1].upper()
-
-                self.codon_table[codon] = amino_acid
-
-    def load_amino_weights(self, file_path):
-
-        with open(file_path, "r", encoding="utf-8") as file:
-
-            for line_number, line in enumerate(file, start=1):
-
-                line = line.strip()
-
-                if not line:
-                    continue
-
-                parts = line.split()
-
-                amino_acid = parts[0].upper()
-                weight = float(parts[1])
-
-                self.amino_weights[amino_acid] = weight
+                    self.amino_weights[amino_acid] = weight
+            if not self.amino_weights:
+                raise DataFileError("Data file contains no entries")
+        except DataFileError as error:
+            #loggerconnect
+            logger.error("Data file %s: %s", self.amino_weights_path, error)
+            raise
+        except (OSError, UnicodeError) as error:
+            #loggerconnect
+            logger.error("Cannot read data file %s: %s", self.amino_weights_path, error)
+            raise DataFileError(f"Cannot read data file {self.amino_weights_path}: {error}") from error
 
 
 class Translator:
@@ -111,11 +127,19 @@ class Translator:
 
             codon = codon.upper()
 
-            amino_acid = self.data.codon_table[codon]
+            #xxx#
+            if len(codon) != 3 or any(base not in "AUCG" for base in codon):
+                raise InvalidSequenceError(f"Invalid RNA codon: {codon}")
+
+            try:
+                amino_acid = self.data.codon_table[codon]
+            except KeyError:
+                #xxx#
+                raise DataFileError(f"Unknown codon: {codon}")
 
             # Stop Codon
             if amino_acid == "*":
-                continue
+                break
 
             protein += amino_acid
 
@@ -127,15 +151,30 @@ class Translator:
 
         for amino_acid in protein:
 
-            total_weight += self.data.amino_weights[amino_acid]
+            weight = self.data.amino_weights.get(amino_acid)
+
+            if weight is None:
+                #xxx#
+                raise DataFileError(
+                    f"Unknown amino acid: {amino_acid}"
+                )
+
+            total_weight += weight
 
         return total_weight
 
     def translate_orf(self, orf):
 
-        protein = self.translate(orf.protein)
-
-        weight = self.calculate_weight(protein)
+        #xxx#
+        try:
+            protein = self.translate(orf.protein)
+            weight = self.calculate_weight(protein)
+        except BioForgeError as error:
+            logger.error(
+                "ORF strand=%s frame=%s start=%s: %s",
+                orf.strand, orf.frame, orf.start_pos, error,
+            )
+            raise
 
         orf.protein = protein
         orf.molecular_weight = weight
@@ -148,50 +187,14 @@ class Translator:
 
         for orf in orfs:
 
-            translated_orf = self.translate_orf(orf)
-
-            translated_orfs.append(translated_orf)
-
-        return translated_orfs
-    
-
-    def calculate_weight(self, protein):
-
-        total_weight = 0.0
-
-        for amino_acid in protein:
-
-            if amino_acid not in self.data.amino_weights:
-                raise DataFileError(
-                    f"Amino acid not found in weight table: {amino_acid}"
-                )
-
-            total_weight += self.data.amino_weights[amino_acid]
-
-        return total_weight
-
-    def translate_orf(self, orf):
-
-        protein = self.translate(orf.protein)
-
-        weight = self.calculate_weight(protein)
-
-        orf.protein = protein
-        orf.molecular_weight = weight
-
-        return orf
-
-    def translate_orfs(self, forward_orfs, reverse_orfs):
-
-        translated_orfs = []
-
-        for orf in orfs:
-
-            translated_orf = self.translate_orf(orf)
+            try:
+                translated_orf = self.translate_orf(orf)
+            except InvalidSequenceError:
+                # خطا در translate_orf ثبت شده؛ پردازش بقیه ادامه دارد.
+                continue
 
             translated_orfs.append(translated_orf)
 
         return translated_orfs
 
 
-    
