@@ -99,7 +99,7 @@ class Translator:
 
     def calculate_weight(self, protein):
 
-        total_weight = 0.0
+        total_weight = 18.015
 
         for amino_acid in protein:
 

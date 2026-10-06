@@ -96,3 +96,4 @@ def parse_fasta(file_path):
     except FileNotFoundError:
         raise
     return records
+
