@@ -3,4 +3,4 @@ Total ORFs: 1
 
 ID       Source   Organism   Strand    Frame   Start   Status      Weight     Protein
 ------------------------------------------------------------------------------------------
-BFG_001 seq001   E_coil     Reverse   0       11      Complete      349.171  MLS
+BFG_001 seq001   E_coil     Reverse   2       9       Incomplete    348.187  MKA

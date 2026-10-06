@@ -5,7 +5,7 @@ from math import isfinite
 
 from Error_and_Logging.errors import DataFileError, FastaFormatError, InvalidSequenceError
 from Error_and_Logging.logger_config import setup_logger
-from Fasta.fasta import parse_fasta, rna, gc_content
+from Fasta.fasta import parse_fasta, rna, gc_content, reverse_complement
 from ORF.forward_strand import ForwardORFDetector
 from ORF.reverse_strand import ReverseStrand
 from Translation.protein_translation import TranslationData, Translator
@@ -81,6 +81,7 @@ def process_record(record, translator, logger):
 
     dna_sequence = record["sequence"]
     rna_sequence = rna(dna_sequence)
+    reverse_rna_sequence = rna(reverse_complement(dna_sequence))
 
     print("\n" + "-" * 70)
     print(f"Sequence ID : {record['id']}")
@@ -88,7 +89,7 @@ def process_record(record, translator, logger):
     print(f"GC content  : {gc_content(dna_sequence):.2f}%")
 
     forward_orfs = ForwardORFDetector(rna_sequence).detect()
-    reverse_orfs = ReverseStrand(rna_sequence).detect()
+    reverse_orfs = ReverseStrand(reverse_rna_sequence).detect()
     orfs = forward_orfs + reverse_orfs
 
     logger.info(

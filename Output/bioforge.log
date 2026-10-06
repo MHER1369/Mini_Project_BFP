@@ -1,0 +1,18 @@
+INFO - BioForge pipeline started
+WARNING - Minimum length must be an integer.
+INFO - Input: C:\Users\Datis\PycharmProjects\Mini_Project_BFP\Input\input.fasta; minimum length: 3; minimum weight: 300.0
+INFO - Reading and validating FASTA file: C:\Users\Datis\PycharmProjects\Mini_Project_BFP\Input\input.fasta
+INFO - Valid FASTA records: 2
+INFO - Loading codon table and amino acid weights
+INFO - Translation data loaded successfully
+INFO - Processing record: seq001
+INFO - Record seq001: found 1 Forward and 1 Reverse ORFs; translating
+INFO - Record seq001: translated 2 ORFs
+INFO - Processing record: seq002
+INFO - Record seq002: found 1 Forward and 1 Reverse ORFs; translating
+INFO - Record seq002: translated 2 ORFs
+INFO - Filtering 4 ORFs
+INFO - Filtering results: 1 after length filter; 1 after weight filter
+INFO - Writing report with IDs for 1 ORFs: C:\Users\Datis\PycharmProjects\Mini_Project_BFP\Output\report.txt
+INFO - Report saved: C:\Users\Datis\PycharmProjects\Mini_Project_BFP\Output\report.txt
+INFO - Pipeline completed: 2 records processed; 0 records skipped during processing
