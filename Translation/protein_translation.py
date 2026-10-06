@@ -1,3 +1,6 @@
+from math import isfinite
+
+from Error_and_Logging.errors import DataFileError, InvalidSequenceError
 
 class TranslationData:
 
@@ -28,19 +31,27 @@ class TranslationData:
                 parts = line.split()
 
                 if len(parts) != 2:
-                    raise ValueError(
-                        f"Invalid codon table format at line {line_number}"
+                    raise DataFileError(
+                        f"{self.codon_table_path}: invalid format at line {line_number}"
                     )
 
                 codon = parts[0].upper()
                 amino_acid = parts[1].upper()
 
                 if len(codon) != 3 or any(char not in valid_nucleotide for char in codon):
-                    raise ValueError(
-                        f"Invalid codon '{codon}' at line {line_number}"
+                    raise DataFileError(
+                        f"{self.codon_table_path}: invalid codon '{codon}' at line {line_number}"
+                    )
+
+                if amino_acid not in set("ACDEFGHIKLMNPQRSTVWY*"):
+                    raise DataFileError(
+                        f"{self.codon_table_path}: invalid amino acid at line {line_number}: {amino_acid}"
                     )
 
                 self.codon_table[codon] = amino_acid
+
+        if not self.codon_table:
+            raise DataFileError(f"Data file contains no entries: {self.codon_table_path}")
 
     def load_amino_weights(self):
 
@@ -56,19 +67,31 @@ class TranslationData:
                 parts = line.split()
 
                 if len(parts) != 2:
-                    raise ValueError(f"Invalid amino weight line: {line_number}")
+                    raise DataFileError(f"{self.amino_weights_path}: invalid format at line {line_number}")
 
                 amino_acid = parts[0].upper()
 
                 try:
                     weight = float(parts[1])
                 except ValueError:
-                    raise ValueError(
-                        f"Invalid amino acid weight at line {line_number}: "
+                    raise DataFileError(
+                        f"{self.amino_weights_path}: invalid weight at line {line_number}: "
                         f"{parts[1]}"
                     )
 
+                if amino_acid not in set("ACDEFGHIKLMNPQRSTVWY"):
+                    raise DataFileError(
+                        f"{self.amino_weights_path}: invalid amino acid at line {line_number}: {amino_acid}"
+                    )
+                if not isfinite(weight) or weight <= 0:
+                    raise DataFileError(
+                        f"{self.amino_weights_path}: invalid weight at line {line_number}: {parts[1]}"
+                    )
+
                 self.amino_weights[amino_acid] = weight
+
+        if not self.amino_weights:
+            raise DataFileError(f"Data file contains no entries: {self.amino_weights_path}")
 
 
 class Translator:
@@ -84,10 +107,13 @@ class Translator:
 
             codon = codon.upper()
 
+            if len(codon) != 3 or any(base not in "AUCG" for base in codon):
+                raise InvalidSequenceError(f"Invalid RNA codon: {codon}")
+
             try:
                 amino_acid = self.data.codon_table[codon]
             except KeyError:
-                raise ValueError(f"Unknown codon: {codon}")
+                raise DataFileError(f"Unknown codon: {codon}")
 
             # Stop Codon
             if amino_acid == "*":
@@ -106,7 +132,7 @@ class Translator:
             weight = self.data.amino_weights.get(amino_acid)
 
             if weight is None:
-                raise ValueError(
+                raise DataFileError(
                     f"Unknown amino acid: {amino_acid}"
                 )
 
